@@ -1,0 +1,39 @@
+# Settings for the Character menu
+# the first two values are x,y positions
+# some items have two more values, width and height
+
+pos=0,0,160,208
+align=left
+soundfx_open=soundfx/inventory/inventory_page.ogg
+soundfx_close=soundfx/inventory/inventory_book.ogg
+
+close=147,1
+label_title=80,4,center,top
+
+upgrade_primary=physical,55,32
+upgrade_primary=mental,55,44
+upgrade_primary=offense,125,32
+upgrade_primary=defense,125,44
+
+statlist=12,64
+
+name=40,16,52,8
+label_name=36,20,right,center
+
+level=136,16,16,8
+label_level=132,20,right,center
+
+primary=physical,8,32,8,8
+label_primary=physical,20,36,left,center
+
+primary=mental,8,44,8,8
+label_primary=mental,20,48,left,center
+
+primary=offense,78,32,8,8
+label_primary=offense,90,36,left,center
+
+primary=defense,78,44,8,8
+label_primary=defense,90,48,left,center
+
+unspent=48,53,80,8
+
