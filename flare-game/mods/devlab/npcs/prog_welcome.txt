@@ -1,0 +1,12 @@
+name=Programmer
+
+portrait=images/portraits/clint.png
+
+talker=true
+
+# animation info
+gfx=animations/npcs/programmer1.txt
+
+[dialog]
+him=Welcome to DevLab, the Developer's Laboratory (or Labyrinth!) mod for Flare. Here you'll find a series of rooms that demonstrate various options and scripting for Flare.
+him=By editing the devlab maps in Tiled and looking at the devlab data files, you'll learn how to create Flare content.

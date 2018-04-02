@@ -1,0 +1,16 @@
+# Settings for the GameLoad menu
+# the first two values are x,y positions
+# some items have two more values, width and height
+
+button_new=205,208
+button_load=169,192
+button_delete=240,192
+portrait=160,16,160,160
+gameslot=0,16,144,48
+preview=0,0,256,64
+name=8,6,left,top
+level=12,18,left,top
+class=12,26,left,top
+map=12,34,left,top
+sprite=89,-12
+loading_label=240,178,center,top
