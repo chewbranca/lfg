@@ -1,0 +1,128 @@
+LFG is based off the https://github.com/clintbellanger/flare-game
+project, and you can find it as a git subtree in ./flare-game/. The
+original LICENSE.txt and CREDITS.txt are both available in the
+./flare-game/ directory and are reproduced in the top level of this
+project along with this notice.
+
+There are additional licenses in the third party Lua modules included
+this project, and they can be found within the files themselves; all
+are open source licenses.
+
+===========================================================================
+ORIGINAL "Copyright and License" blurb from ./flare-game/README.md
+===========================================================================
+
+## Copyright and License
+
+Flare (the game) is Copyright ©2010-2013 Clint Bellanger. Contributors
+retain copyrights to their original contributions.
+
+The Flare Engine is released under GPL version 3 or later.
+
+All of Flare's art and data files are released under CC-BY-SA
+3.0. Later versions are permitted.
+
+The Liberation Sans fonts version 2 are released under the SIL Open
+Font License, Version 1.1.
+
+The GNU Unifont font is released under GPL v2, with the exception that
+embedding the font in a document does not in itself bind that document
+to the terms of the GPL.
+
+
+===========================================================================
+ORIGINAL CREDITS FROM ./flare-game/CREDITS.txt
+===========================================================================
+
+Flare Game Credits
+
+Art
+
+Blarumyrran
+Brandon Morris "Augmentality" | http://www.youtube.com/brandon75689
+Clint Bellanger | http://clintbellanger.net
+Holly Daniel | https://www.odesk.com/users/~~822174c5679d5273
+Justin Jacobs | http://dorkster.github.io/
+Justin Nichol | http://blackflaggames.org/
+Jessica "Zeldyn" Cox | http://zeldyn.deviantart.com/
+remaxim | http://opengameart.org/users/remaxim
+Sarah Benalene | http://benalene.com/
+Scrittl
+Stefan Beller | http://github.com/stefanbeller
+
+Additional Art
+  Thanks to these artists for releasing reusable open-licensed art
+
+Aare
+Bart K | OpenGameArt.org
+Blender Foundation | apricot.blender.org
+Cori Samuel
+D. Sharon Pruitt
+Hythlodaeus
+Iwan "qubodup" Gabovitch
+Lamoot
+Lattice
+Ljudbank
+Lorc
+MaximB
+Michael Baradari
+Mike Koenig
+Mikodrak
+Misha
+Mumu
+Naraphim
+p0ss
+Renderwahn
+rubberduck
+Samuel Moxham
+Sindwiller
+Spookymodem
+Stephan
+TiZiana
+Vwolfdog
+Yughues
+Zuendholz
+
+Content
+
+Clint Bellanger | http://clintbellanger.net
+Justin Jacobs | http://dorkster.github.io/
+Stefan Beller | http://github.com/stefanbeller
+Thane "pennomi" Brimhall | http://github.com/pennomi
+
+Distributions
+
+Ablu
+Feillyne
+Jan-Hendrik (hennr) Peters
+Manuel A. Fernandez Montecelo
+miffe
+... and many others
+
+Translations
+
+(be) Belarussian by Mikhail Karalevich
+(cs) Czech by Nikita Vanku (Zaraka)
+(de) German by Thomas 'CruzR' Glamsch, Chris Oelmueller, Janet Hunt, Stefan Beller, and Wuzzy2
+(el) Greek by Yannis Anthymidis and Michael Papageorgiou
+(es) Spanish by Juan Pablo 'morris989' Tamayo and Carlos Sanchez
+(fi) Finnish by Timo Sievänen
+(fr) French by Quentin 'acieroid' Stievenart, Bonbadil, Morgan Strauss, and Christoph J. Thompson
+(gd) Scottish Gaelic by GunChleoc
+(gl) Galacian by Adrian Chaves Fernandez (Gallaecio)
+(it) Italian by Giovanni Dalla Torre and Andrea Ranaldi
+(ja) Japanese by Paul Wortmann, sujiniku
+(nb) Norwegian Bokmal by Hans Joachim Desserud
+(nl) Dutch by Bas Doodeman
+(pl) Polish by Paweł Puszczyński
+(ru) Russian by Sergey Basalaev and Evgen Pavlov
+(sk) Slovak by Miro Jánošík
+(sv) Swedish by Andreas Berheim Brudin
+(uk) Ukrainian by Igor Paliychuk
+(zh) Chinese by lonsine
+
+Full Credits
+
+See the full credits listing including per-file attribution online:
+https://github.com/clintbellanger/flare-engine/wiki/Credits
+https://github.com/clintbellanger/flare-game/wiki/Credits
