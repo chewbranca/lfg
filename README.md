@@ -8,6 +8,11 @@ amazing work in Flare Game using the [Love 2D](https://love2d.org/)
 game engine as a base. This engine is built with multiplayer pvp in
 mind and a subset of functionality from Flare Game is supported.
 
+[running around](./img/lfg_minotaur_run.gif)
+[random mobs](./img/lfg_rand_mobs.gif)
+
+# Demo
+
 To see a demo of the engine you can create a main.lua file similar to:
 (WARNING: "demo" is a stretch, more of a test bed at the moment)
 
