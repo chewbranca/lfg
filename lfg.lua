@@ -1,9 +1,18 @@
+local anim8 = require "anim8"
+local ini = require "inifile"
+local lume = require "lume"
+local serpent = require "serpent"
+local sti = require "sti"
+
+
 local lfg = {
     world_file = "world.dat",
     map_file = "map.lua",
     map = nil,
 
     conf = {
+        ["debug"] = true,
+
         flare_dir = "flare-game/",
         char_dir = "flare-game/art_src/characters/",
         anim_dir = "flare-game/art_src/animation_defs/",
@@ -13,12 +22,6 @@ local lfg = {
 }
 
 local entities_layer = nil
-
-local anim8 = require "anim8"
-local ini = require "inifile"
-local lume = require "lume"
-local serpent = require "serpent"
-local sti = require "sti"
 
 local characters_ = {}
 local entities_ = {}
@@ -43,7 +46,7 @@ local DIRS = {
     D_SW,
 }
 
-local NDIRS = {
+local KEY_DIRS = {
     up = {x=0, y=-1},
     down = {x=0, y=1},
     left = {x=-1, y=0},
@@ -152,7 +155,7 @@ function lfg.Character(c)
     assert(c.animation, "Character animation is present")
 
     local char = {
-        ams = {},  -- animations
+        ams = {},   -- animations
         as = nil,   -- animation_set
         grid = nil,
         sprite = nil,
@@ -184,8 +187,6 @@ function lfg.Character(c)
     characters_[char.name] = char
     return char
 end
-
-local Character = lfg.Character
 
 
 function lfg.get_character(c) return characters_[c] end
@@ -260,11 +261,6 @@ function lfg.Entity:new(name, char, x, y, r, ox, oy, map_inputs)
     entities_[name] = self
     entities_layer.entities[name] = self
 
-    print("CREATING ENTITY: ")
-    lfg.pp(char.ams[DEFAULT_DIR])
-    lfg.pp(self.am)
-    lfg.pp(self)
-
     return self
 end
 
@@ -307,8 +303,8 @@ function lfg.get_key_dir()
     local cdir = {x=0, y=0}
     local ret = nil
 
-    for name, dir in pairs(NDIRS) do
-        if love.keyboard.isDown(name) then
+    for key, dir in pairs(KEY_DIRS) do
+        if love.keyboard.isDown(key) then
             cdir.x = cdir.x + dir.x
             cdir.y = cdir.y + dir.y
         end
