@@ -36,6 +36,10 @@ end
 Or you can execute the demo directly with Love 2D:
 
 ```
+# ****WARNINGS****
+# this repo is *large*, don't download over mobile
+
+
 # Clone the repo using git:
 $ git clone https://github.com/chewbranca/lfg.git
 
