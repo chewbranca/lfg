@@ -9,6 +9,8 @@ local lfg = {
     world_file = "world.dat",
     map_file = "map.lua",
     map = nil,
+    player_obj = nil,
+    m_objects = {},
 
     conf = {
         ["debug"] = true,
@@ -26,6 +28,7 @@ local entities_layer = nil
 local characters_ = {}
 local entities_ = {}
 
+-- This ordering on rows is based on the sprite sheets
 local D_W  = {x=-1, y=0}  -- row 1
 local D_NW = {x=-1, y=-1} -- row 2
 local D_N  = {x=0,  y=-1} -- row 3
@@ -215,7 +218,18 @@ function lfg.init(conf)
     _G.Character = nil
 
     lfg.map = assert(sti(lfg.conf.map_file))
-    entities_layer = lfg.map:addCustomLayer("Entities", 5)
+
+    for k, obj in pairs(lfg.map.objects) do
+        lfg.m_objects[k] = obj
+        if obj.name == "Player0" then
+            assert(not lfg.player_obj)
+            lfg.player_obj = obj
+        else
+            lfg.dbg("SKIPPING OBJ: %s", obj.name)
+        end
+    end
+
+    entities_layer = lfg.map:addCustomLayer("Entities", #lfg.map.layers + 1)
     entities_layer.entities = {}
     entities_layer.update = update_entities
     entities_layer.draw = draw_entities
@@ -237,29 +251,30 @@ end
 lfg.Entity = {}
 local Entity_mt = { __index = lfg.Entity }
 
-function lfg.Entity:new(name, char, x, y, r, ox, oy, map_inputs)
-    assert(name)
-    assert(char)
+function lfg.Entity:new(e)
+    assert(e.name)
+    assert(e.char)
 
     local self = {
-        char = char,
-        name = name,
-        x = x or 0,
-        y = y or 0,
-        ox = ox or 0,
-        oy = oy or 0,
-        vx = 0,
-        vy = 0,
-        cdir = DEFAULT_DIR,
-        state = DEFAULT_STATE,
-        am = char.ams[DEFAULT_DIR][DEFAULT_STATE],
-        map_inputs = map_inputs or false,
-        speed = 96,
+        char       = e.char,
+        name       = e.name,
+        x          = e.x or 0,
+        y          = e.y or 0,
+        ox         = e.ox or 0,
+        oy         = e.oy or 0,
+        vx         = e.vx or .0,
+        vy         = e.vy or .0,
+        cdir       = e.cdir or DEFAULT_DIR,
+        state      = e.state or DEFAULT_STATE,
+        am         = e.am or e.char.ams[DEFAULT_DIR][DEFAULT_STATE],
+        map_inputs = e.map_inputs or false,
+        speed      = e.speed or 99,
+        obj = e
     }
     setmetatable(self, Entity_mt)
 
-    entities_[name] = self
-    entities_layer.entities[name] = self
+    entities_[e.name] = self
+    entities_layer.entities[e.name] = self
 
     return self
 end
