@@ -11,6 +11,14 @@ local lfg = {
     map = nil,
     player_obj = nil,
     m_objects = {},
+    mouse = {
+        x = 0,
+        y = 0,
+        e_dx = 0,
+        e_dy = 0,
+        angle = 0,
+        distance = 0,
+    },
 
     conf = {
         ["debug"] = true,
@@ -38,6 +46,7 @@ local D_SE = {x=1,  y=1}  -- row 6
 local D_S  = {x=0,  y=1}  -- row 7
 local D_SW = {x=-1, y=1}  -- row 8
 
+-- Flare Game sprites are west oriented
 local DIRS = {
     D_W ,
     D_NW,
@@ -47,6 +56,18 @@ local DIRS = {
     D_SE,
     D_S ,
     D_SW,
+}
+
+-- radians are east oriented
+local RDIRS = {
+    D_E ,
+    D_SE,
+    D_S ,
+    D_SW,
+    D_W ,
+    D_NW,
+    D_N ,
+    D_NE,
 }
 
 local KEY_DIRS = {
@@ -67,6 +88,7 @@ local STATES = {
 
 local DEFAULT_DIR = D_S
 local DEFAULT_STATE = STATES.stand
+local DEFAULT_SPEED = 150
 
 
 function lfg.pp(obj, fn)
@@ -208,6 +230,14 @@ local draw_entities = function(self)
 end
 
 
+-- thanks to: https://gamedev.stackexchange.com/questions/49290/whats-the-best-way-of-transforming-a-2d-vector-into-the-closest-8-way-compass-d
+local function angle_to_dir(angle)
+    local n = #RDIRS
+    local i = 1 + math.floor(n * angle / (2 * math.pi) + n + 0.5) % n
+    return RDIRS[i]
+end
+
+
 function lfg.init(conf)
     if conf then
         for k, v in pairs(conf) do lfg.conf[k] = v end
@@ -238,13 +268,61 @@ function lfg.init(conf)
 end
 
 
+function lfg.set_player(player)
+    lfg.player = player
+end
+
+
 function lfg.update(dt)
     lfg.map:update(dt)
 end
 
 
 function lfg.draw(dt)
-    lfg.map:draw(dt)
+    local tx = math.floor(lfg.player.x - love.graphics.getWidth() / 2)
+    local ty = math.floor(lfg.player.y - love.graphics.getHeight() / 2)
+
+    love.graphics.push()
+    do
+        lfg.map:draw(-tx, -ty)
+        love.graphics.translate(-tx, -ty)
+        love.graphics.points(math.floor(lfg.player.x), math.floor(lfg.player.y))
+        love.graphics.rectangle("line", lfg.player.x - lfg.player.ox, lfg.player.y - lfg.player.oy, 128, 128)
+    end
+    love.graphics.pop()
+
+    love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
+    love.graphics.print(string.format("Current Pos: (%.2f, %.2f)", lfg.player.x, lfg.player.y), 10, 30)
+    love.graphics.print(string.format("Mouse Pos:   (%.2f, %.2f)", lfg.mouse.x, lfg.mouse.y), 10, 50)
+    local deg = (math.deg(lfg.mouse.angle) + 360) % 360
+    love.graphics.print(string.format("Angle[%.2f]: %.2f {%.2f} {[%i]}", lfg.mouse.distance, lfg.mouse.angle, math.deg(lfg.mouse.angle), deg), 10, 70)
+end
+
+
+function lfg.mousemoved(m_x, m_y, dx, dy)
+    -- TODO: redraw angle when player moves even if mouse doesn't move
+    --    eg you could strafe far enough to warrant angle change
+
+    -- {x,y} are middle of the screen, not player.{x,y}
+    local x = math.floor(love.graphics.getWidth() / 2)
+    local y = math.floor(love.graphics.getHeight() / 2)
+
+    -- angle between player and mouse
+    local angle = lume.angle(x, y, m_x, m_y)
+    local distance = lume.distance(x, y, m_x, m_y)
+    local e_dx, e_dy = lume.vector(angle, distance)
+
+    lfg.mouse = {
+        x = m_x,
+        y = m_y,
+        e_dx = e_dx,
+        e_dy = e_dy,
+        angle = angle,
+        distance = distance,
+    }
+
+    lfg.player.cdir = angle_to_dir(angle)
+    lfg.player:set_animation(lfg.player.cdir)
 end
 
 
@@ -260,15 +338,15 @@ function lfg.Entity:new(e)
         name       = e.name,
         x          = e.x or 0,
         y          = e.y or 0,
-        ox         = e.ox or 0,
-        oy         = e.oy or 0,
+        ox         = e.ox or e.char.as.ox or 0,
+        oy         = e.oy or e.char.as.oy or 0,
         vx         = e.vx or .0,
         vy         = e.vy or .0,
         cdir       = e.cdir or DEFAULT_DIR,
         state      = e.state or DEFAULT_STATE,
         am         = e.am or e.char.ams[DEFAULT_DIR][DEFAULT_STATE],
         map_inputs = e.map_inputs or false,
-        speed      = e.speed or 99,
+        speed      = e.speed or DEFAULT_SPEED,
         obj = e
     }
     setmetatable(self, Entity_mt)
@@ -280,23 +358,24 @@ function lfg.Entity:new(e)
 end
 
 
+function lfg.Entity:set_animation(dir, state)
+    assert(dir)
+    state = state or self.state
+    self.am = self.char.ams[dir][state]
+end
+
+
 function lfg.Entity:update(dt)
     if self.map_inputs then
         local dir = lfg.get_key_dir()
         if not dir then
             if self.state ~= STATES.stand then
                 self.state = STATES.stand
-                self.am = self.char.ams[self.cdir][self.state]
             end
         else
             if self.state ~= STATES.run then
                 self.state = STATES.run
-                self.am = self.char.ams[self.cdir][self.state]
-            end
-
-            if dir ~= self.cdir then
-                self.am = self.char.ams[dir][self.state]
-                self.cdir = dir
+                self:set_animation(self.cdir, self.state)
             end
 
             self.x = self.x + dir.x * self.speed * dt

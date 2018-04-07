@@ -2,6 +2,7 @@
 
 local lfg = require "lfg"
 
+
 function love.load()
     assert(lfg.init({map_file="map_demo.lua"}))
 
@@ -20,15 +21,25 @@ function love.load()
     player_obj.char = minotaur
 
     local player = lfg.Entity:new(player_obj)
+    lfg.set_player(player)
     lfg.dbg("PLAYER IS:")
     lfg.pp(player)
 end
 
 
+-- or: love.update = lfg.update
 function love.update(dt)
     lfg.update(dt)
 end
 
+
+-- or: love.draw = lfg.draw
 function love.draw()
     lfg.draw()
+end
+
+
+-- or: love.mousemoved = lfg.mousemoved
+function love.mousemoved(...)
+    lfg.mousemoved(...)
 end
