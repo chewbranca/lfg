@@ -31,10 +31,16 @@ local lfg = {
     },
 }
 
-local entities_layer = nil
-
-local characters_ = {}
+-- in game actors
 local entities_ = {}
+local projectiles_ = {}
+
+local entities_layer = nil
+local projectiles_layer = nil
+
+-- Flare Game base objects
+local characters_ = {}
+local spells_ = {}
 
 -- This ordering on rows is based on the sprite sheets
 local D_W  = {x=-1, y=0}  -- row 1
@@ -84,11 +90,14 @@ local KEY_DIRS = {
 local STATES = {
     run = "run",
     stand = "stance",
+    swing = "swing",
+    cast = "cast",
 }
 
 local DEFAULT_DIR = D_S
 local DEFAULT_STATE = STATES.stand
 local DEFAULT_SPEED = 150
+local DEFAULT_PJT_SPEED = DEFAULT_SPEED * math.pi
 
 
 function lfg.pp(obj, fn)
@@ -215,6 +224,73 @@ end
 
 
 function lfg.get_character(c) return characters_[c] end
+function lfg.get_spell(s) return spells_[s] end
+
+
+function lfg.Spell(s)
+    assert(s.name, "Spell name is present")
+    assert(s.sprite, "Spell sprite is present")
+    assert(s.animation, "Spell animation is present")
+
+    local spell = {
+        ams = {},   -- animations
+        as = nil,   -- animation_set
+        grid = nil,
+        sprite = nil,
+        name = s.name,
+    }
+
+    local sprite_path = s.sprite:match("^/") and s.sprite or (lfg.conf.flare_dir .. s.sprite)
+    spell.sprite = assert(love.graphics.newImage(sprite_path))
+
+    local anim_path = lfg.conf.flare_dir .. s.animation
+    spell.as = assert(lfg.load_and_process(anim_path))
+
+    spell.grid = anim8.newGrid(spell.as.w, spell.as.h, spell.sprite:getWidth(), spell.sprite:getHeight())
+
+    for row, dir in ipairs(DIRS) do
+        spell.ams[dir] = {}
+        for name, am in pairs(spell.as.animations) do
+            local begin = am.position + 1
+            local fin   = am.position + am.frames
+            local fdur = am.duration / am.frames
+            local frames = string.format("%s-%s", begin, fin)
+
+            spell.ams[dir][name] = assert(anim8.newAnimation(spell.grid(frames, row), fdur))
+        end
+    end
+
+    spells_[spell.name] = spell
+    return spell
+end
+
+
+local update_projectiles = function(self, dt)
+    local to_rem = {}
+    for i, pjt in ipairs(projectiles_) do
+        pjt.age = pjt.age + dt
+        if pjt.age > pjt.max_age then
+            table.insert(to_rem, i)
+        end
+    end
+
+    for _, idx in ipairs(to_rem) do
+        table.remove(projectiles_, idx)
+    end
+
+    for _, pjt in ipairs(projectiles_) do
+        pjt:update(dt)
+    end
+end
+
+
+local draw_projectiles = function(self)
+    -- TODO: decide on storing projectiles in global or in map like entities
+    for _, pjt in ipairs(projectiles_) do
+        pjt:draw()
+    end
+end
+
 
 local update_entities = function(self, dt)
     for _, ent in pairs(entities_layer.entities) do
@@ -243,9 +319,12 @@ function lfg.init(conf)
         for k, v in pairs(conf) do lfg.conf[k] = v end
     end
 
+    -- TODO: switch to proper env
     _G.Character = lfg.Character
+    _G.Spell = lfg.Spell
     dofile(lfg.conf.world_file)
     _G.Character = nil
+    _G.Spell = nil
 
     lfg.map = assert(sti(lfg.conf.map_file))
 
@@ -263,6 +342,10 @@ function lfg.init(conf)
     entities_layer.entities = {}
     entities_layer.update = update_entities
     entities_layer.draw = draw_entities
+
+    projectiles_layer = lfg.map:addCustomLayer("Projectiles", #lfg.map.layers + 1)
+    projectiles_layer.update = update_projectiles
+    projectiles_layer.draw = draw_projectiles
 
     return lfg
 end
@@ -326,6 +409,46 @@ function lfg.mousemoved(m_x, m_y, dx, dy)
 end
 
 
+local resetstand = function()
+    lfg.player.state = STATES.stand
+    lfg.player:set_animation(lfg.player.cdir, lfg.player.state)
+end
+
+function lfg.mousepressed(m_x, m_y, button)
+    local x = math.floor(love.graphics.getWidth() / 2)
+    local y = math.floor(love.graphics.getHeight() / 2)
+
+    -- angle between player and mouse
+    local angle = lume.angle(x, y, m_x, m_y)
+    local distance = lume.distance(x, y, m_x, m_y)
+    local e_dx, e_dy = lume.vector(angle, distance)
+
+    if button == 1 then
+        lfg.player.state = STATES.swing
+        lfg.player:set_animation(lfg.player.cdir, lfg.player.state)
+        lfg.player.am.onLoop = resetstand
+    elseif button == 2 then
+        local n_dx = e_dx / distance
+        local n_dy = e_dy / distance
+
+        local pjt = lfg.Projectile:new({
+            x      = lfg.player.x,
+            y      = lfg.player.y,
+            dx     = n_dx,
+            dy     = n_dy,
+            am     = lfg.player.spell.ams[lfg.player.cdir].power,
+            ox     = lfg.player.spell.as.ox,
+            oy     = lfg.player.spell.as.oy,
+            sprite = lfg.player.spell.sprite,
+        })
+
+        lfg.player.state = STATES.cast
+        lfg.player:set_animation(lfg.player.cdir, lfg.player.state)
+        lfg.player.am.onLoop = resetstand
+    end
+end
+
+
 lfg.Entity = {}
 local Entity_mt = { __index = lfg.Entity }
 
@@ -347,7 +470,8 @@ function lfg.Entity:new(e)
         am         = e.am or e.char.ams[DEFAULT_DIR][DEFAULT_STATE],
         map_inputs = e.map_inputs or false,
         speed      = e.speed or DEFAULT_SPEED,
-        obj = e
+        spell      = e.spell or spells_["Fireball"],
+        obj        = e,
     }
     setmetatable(self, Entity_mt)
 
@@ -389,6 +513,53 @@ end
 
 function lfg.Entity:draw()
     self.am:draw(self.char.sprite, self.x, self.y, 0, 1, 1, self.ox, self.oy)
+end
+
+lfg.Projectile = {}
+local Projectile_mt = { __index = lfg.Projectile }
+
+
+function lfg.Projectile:new(p)
+    assert(p.am)
+    assert(p.sprite)
+    assert(p.x)
+    assert(p.y)
+    assert(p.dx)
+    assert(p.dy)
+
+    local self = {
+        am = p.am,
+        sprite = p.sprite,
+        x = p.x,
+        y = p.y,
+        dx = p.dx,
+        dy = p.dy,
+
+        ox = p.ox or 0,
+        oy = p.oy or 0,
+        speed = p.speed or DEFAULT_PJT_SPEED,
+
+        age = 0,
+        max_age = 5,
+    }
+
+    setmetatable(self, Projectile_mt)
+    table.insert(projectiles_, self)
+
+    return self
+end
+
+
+function lfg.Projectile:update(dt)
+    self.x = self.x + self.dx * self.speed * dt
+    self.y = self.y + self.dy * self.speed * dt
+
+    self.am:update(dt)
+end
+
+
+function lfg.Projectile:draw()
+    self.am:draw(self.sprite, self.x, self.y, 0, 1, 1, self.ox, self.oy)
 end
 
 

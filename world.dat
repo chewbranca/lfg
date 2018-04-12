@@ -50,3 +50,21 @@ Character{
     sprite = "zombie/zombie.png",
     animation = "characters/zombie.txt"
 }
+
+Spell{
+    name = "Fireball",
+    sprite = "art_src/spells/fireball.png",
+    animation = "art_src/animation_defs/powers/fireball.txt"
+}
+
+Spell{
+    name = "Lightning",
+    sprite = "art_src/spells/lightning.png",
+    animation = "art_src/animation_defs/powers/lightning.txt"
+}
+
+Spell{
+    name = "Channel",
+    sprite = "art_src/spells/channel.png",
+    animation = "art_src/animation_defs/powers/channel.txt"
+}

@@ -6,19 +6,16 @@ local lfg = require "lfg"
 function love.load()
     assert(lfg.init({map_file="map_demo.lua"}))
 
-    local minotaur = lfg.get_character("Minotaur")
-    -- player_obj is map tile object with id="Player0"
-    local base_obj = {
-        name ="Player foo",
-        char = minotaur,
-        x = 5,
-        y = 5,
-        map_inputs = true,
-    }
+    local minotaur = lfg.get_character("Minotaur") -- or "Skeleton" or "Zombie"
+    local spell = lfg.get_spell("Fireball") -- or "Lightning" or "Channel", etc
 
-    local player_obj = lfg.player_obj or base_obj
-    player_obj.map_inputs = true
+    local player_obj = lfg.player_obj or {}
+    player_obj.name ="Player foo"
     player_obj.char = minotaur
+    player_obj.x = 5
+    player_obj.y = 5
+    player_obj.map_inputs = true
+    player_obj.spell = spell
 
     local player = lfg.Entity:new(player_obj)
     lfg.set_player(player)
@@ -43,3 +40,5 @@ end
 function love.mousemoved(...)
     lfg.mousemoved(...)
 end
+
+love.mousepressed = lfg.mousepressed
