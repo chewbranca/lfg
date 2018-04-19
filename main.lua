@@ -4,7 +4,7 @@ local lfg = require "lfg"
 
 
 function love.load()
-    assert(lfg.init({map_file="map_demo.lua"}))
+    assert(lfg.init({map_file="map_lfg_demo.lua"}))
 
     local minotaur = lfg.get_character("Minotaur") -- or "Skeleton" or "Zombie"
     local spell = lfg.get_spell("Fireball") -- or "Lightning" or "Channel", etc
