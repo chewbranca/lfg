@@ -1,4 +1,5 @@
 local anim8 = require "anim8"
+local bump = require "bump"
 local ini = require "inifile"
 local lume = require "lume"
 local serpent = require "serpent"
@@ -30,6 +31,8 @@ local lfg = {
         map_file = "map.lua",
     },
 }
+
+local real_player = {x = 25, y = 25}
 
 -- in game actors
 local entities_ = {}
@@ -338,6 +341,50 @@ function lfg.init(conf)
         end
     end
 
+    lfg.map = assert(sti(lfg.conf.map_file, {"bump"}))
+    -- TODO: does bump.cellSize need to be 2D for isometric?
+    --lfg.world = bump.newWorld({x=64, y=32})
+    --lfg.world = bump.newWorld({x=32, y=32})
+    lfg.world = bump.newWorld(32)
+    lfg.map:bump_init(lfg.world)
+
+    -- ugly hack due to isometric bug with STI
+    local map_mod_name = string.gsub(lfg.conf.map_file, ".lua$", "")
+    local map_data = assert(require(map_mod_name))
+    local layer = nil
+    for _, l in pairs(map_data.layers) do
+        if l.name == "collision" then
+            layer = l
+            break
+        end
+    end
+    assert(layer)
+    assert(#layer.data == layer.width * layer.height)
+
+    lfg.real_world = bump.newWorld(1)
+
+    for i, t in ipairs(layer.data) do
+        -- assume any tile (eg t ~= 0) is a collision tile
+        if t ~= 0 then
+            -- zero offset
+            local row = math.floor( i / layer.width)
+            local col = i % layer.width
+            local name = string.format("collision-%i", i)
+            lfg.real_world:add(name, row, col, 1, 1)
+        end
+    end
+
+    -- TODO: why doesn't this work?
+    -- Still a bug somewhere in the isometric conversions
+    --local count = 0
+    --for i, v in ipairs(lfg.world:getItems()) do
+    --    local item = lfg.world.rects[v]
+    --    local x, y = lfg.map:convertPixelToTile(item.x, item.y)
+    --    local name = string.format("collision-%i", i)
+    --    lfg.dbg("ADDING COLLISION %s AT <%i, %i>[%i, %i]", name, x, y, item.x, item.y)
+    --    --lfg.real_world:add(name, x, y, 1, 1)
+    --end
+
     entities_layer = lfg.map:addCustomLayer("Entities", #lfg.map.layers + 1)
     entities_layer.entities = {}
     entities_layer.update = update_entities
@@ -352,6 +399,11 @@ end
 
 
 function lfg.set_player(player)
+    real_player.x, real_player.y = player.x, player.y
+    local x, y = lfg.map:convertTileToPixel(player.x, player.y)
+    player.x, player.y = x, y
+    lfg.world:add(player, player.x, player.y, 128, 128)
+    lfg.real_world:add(real_player, real_player.x, real_player.y, 1, 1)
     lfg.player = player
 end
 
@@ -368,6 +420,8 @@ function lfg.draw(dt)
     love.graphics.push()
     do
         lfg.map:draw(-tx, -ty)
+        -- TODO: why is this still drawing on a rectangle grid?
+        --lfg.map:bump_draw(lfg.world, -tx, -ty)
         love.graphics.translate(-tx, -ty)
         love.graphics.points(math.floor(lfg.player.x), math.floor(lfg.player.y))
         love.graphics.rectangle("line", lfg.player.x - lfg.player.ox, lfg.player.y - lfg.player.oy, 128, 128)
@@ -375,7 +429,8 @@ function lfg.draw(dt)
     love.graphics.pop()
 
     love.graphics.print("Current FPS: "..tostring(love.timer.getFPS( )), 10, 10)
-    love.graphics.print(string.format("Current Pos: (%.2f, %.2f)", lfg.player.x, lfg.player.y), 10, 30)
+    local tl_x, tl_y = lfg.map:convertPixelToTile(lfg.player.x, lfg.player.y)
+    love.graphics.print(string.format("Current Pos: (%.2f, %.2f) <%.2f, %.2f>", lfg.player.x, lfg.player.y, tl_x, tl_y), 10, 30)
     love.graphics.print(string.format("Mouse Pos:   (%.2f, %.2f)", lfg.mouse.x, lfg.mouse.y), 10, 50)
     local deg = (math.deg(lfg.mouse.angle) + 360) % 360
     love.graphics.print(string.format("Angle[%.2f]: %.2f {%.2f} {[%i]}", lfg.mouse.distance, lfg.mouse.angle, math.deg(lfg.mouse.angle), deg), 10, 70)
@@ -502,8 +557,18 @@ function lfg.Entity:update(dt)
                 self:set_animation(self.cdir, self.state)
             end
 
-            self.x = self.x + dir.x * self.speed * dt
-            self.y = self.y + dir.y * self.speed * dt
+            local x = self.x + dir.x * self.speed * dt
+            local y = self.y + dir.y * self.speed * dt
+            local tl_x, tl_y = lfg.map:convertPixelToTile(x, y)
+            --local actual_x, actual_y, cols, len = lfg.world:move(
+            --    lfg.player, new_x, new_y)
+            local actual_x, actual_y, cols, len = lfg.real_world:move(
+                real_player, tl_x, tl_y)
+            local actual_x_px, actual_y_px = lfg.map:convertTileToPixel(
+                actual_x, actual_y)
+
+            real_player.x, real_player.y = actual_x, actual_y
+            self.x, self.y = actual_x_px, actual_y_px
         end
     end
 

@@ -12,8 +12,8 @@ function love.load()
     local player_obj = lfg.player_obj or {}
     player_obj.name ="Player foo"
     player_obj.char = minotaur
-    player_obj.x = 5
-    player_obj.y = 5
+    player_obj.x = 25 -- x in tiles
+    player_obj.y = 25 -- y in tiles
     player_obj.map_inputs = true
     player_obj.spell = spell
 
