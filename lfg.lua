@@ -325,7 +325,7 @@ function lfg.init(conf)
     -- TODO: switch to proper env
     _G.Character = lfg.Character
     _G.Spell = lfg.Spell
-    dofile(lfg.conf.world_file)
+    love.filesystem.load(lfg.conf.world_file)()
     _G.Character = nil
     _G.Spell = nil
 
